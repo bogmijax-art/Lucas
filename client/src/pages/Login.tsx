@@ -1,0 +1,10 @@
+import { FormEvent, useState } from "react";
+import { ArrowRight, Infinity, LockKeyhole } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
+export default function Login() {
+  const { login } = useAuth(); const nav = useNavigate(); const [email,setEmail]=useState(""); const [password,setPassword]=useState(""); const [error,setError]=useState("");
+  const submit = async (e: FormEvent) => { e.preventDefault(); setError(""); try { await login(email,password); nav("/workspace"); } catch(err) { setError(err instanceof Error ? err.message : "Unable to sign in"); } };
+  return <div className="auth-story"><div className="auth-story-side"><Link to="/" className="auth-brand"><span>∞</span> Infinity Labs</Link><div className="auth-story-copy"><span>INFINITY LABS × NEXUSFLOW</span><h1>Work should feel<br/><em>connected.</em></h1><p>One workspace for the people, projects, and priorities that move your business forward.</p></div><div className="auth-story-footer">SOFTWARE ENGINEERING × ARTIFICIAL INTELLIGENCE</div></div><div className="auth-form-side"><div className="auth-form-box"><Link to="/" className="back-link">← Back to company</Link><div className="auth-symbol"><Infinity size={26}/></div><span className="workspace-kicker">NEXUSFLOW WORKSPACE</span><h2>Welcome back.</h2><p>Sign in to continue where the work left off.</p>{error && <div className="auth-error">{error}</div>}<form onSubmit={submit}><label>Work email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@company.com" required/></label><label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Your password" required/></label><button className="workspace-button full">Sign in <ArrowRight size={17}/></button></form><div className="auth-note"><LockKeyhole size={14}/> Secure workspace access</div><p className="auth-switch">New to NexusFlow? <Link to="/register">Create a workspace</Link></p></div></div></div>;
+}
