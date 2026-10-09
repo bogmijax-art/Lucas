@@ -107,9 +107,11 @@ export default function CompanyIntro() {
                 <img className="simple-capability-image" src={image} alt="" loading="lazy" />
               </div>
               <div className="simple-capability-body">
-                <div className="simple-capability-top"><span>0{index + 1}</span><Icon size={21} /></div>
-                <div><h3>{title}</h3><p>{text}</p></div>
-                <ArrowRight className="simple-capability-arrow" size={18} />
+                <div className="simple-capability-info">
+                  <div className="simple-capability-icon"><Icon size={24} /></div>
+                  <div><h3>{title}</h3><p>{text}</p></div>
+                </div>
+                <ArrowRight className="simple-capability-arrow" size={20} />
               </div>
             </article>
           ))}

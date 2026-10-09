@@ -1,4 +1,7 @@
+import type { PoolClient } from "pg";
 import pool from "../../database/pool.js";
+
+type QueryExecutor = Pick<PoolClient, "query">;
 
 export interface CreateUserData {
   name: string;
@@ -24,7 +27,7 @@ export const findUserByEmail = async (email: string) => {
   return result.rows[0] ?? null;
 };
 
-export const createUser = async (data: CreateUserData, client = pool) => {
+export const createUser = async (data: CreateUserData, client: QueryExecutor = pool) => {
   const result = await client.query(
     `
     INSERT INTO users (name, email, password_hash)
@@ -39,7 +42,7 @@ export const createUser = async (data: CreateUserData, client = pool) => {
 
 export const createCompany = async (
   data: CreateCompanyData,
-  client = pool
+  client: QueryExecutor = pool
 ) => {
   const result = await client.query(
     `
@@ -56,7 +59,7 @@ export const createCompany = async (
 export const createCompanyMember = async (
   userId: string,
   companyId: string,
-  client = pool
+  client: QueryExecutor = pool
 ) => {
   const result = await client.query(
     `

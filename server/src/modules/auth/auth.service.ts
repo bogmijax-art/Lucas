@@ -29,71 +29,48 @@ export const register = async (input: RegisterInput) => {
   const name = input.name.trim();
   const email = input.email.trim().toLowerCase();
   const companyName = input.companyName.trim();
+  const secret = process.env.JWT_SECRET;
 
   if (!name || !email || !input.password || !companyName) {
     throw new Error("All fields are required");
   }
+  if (input.password.length < 8) {
+    throw new Error("Password must be at least 8 characters long");
+  }
+  if (!secret) {
+    throw new Error("JWT_SECRET is not configured");
+  }
 
   const existingUser = await findUserByEmail(email);
-
   if (existingUser) {
     throw new Error("Email is already registered");
   }
 
   const passwordHash = await bcrypt.hash(input.password, 12);
-
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
-
-    const user = await createUser(
-      {
-        name,
-        email,
-        passwordHash,
-      },
-      // client
-    );
-
+    // All three writes must use the same connection so the transaction is real.
+    const user = await createUser({ name, email, passwordHash }, client);
     const company = await createCompany(
-      {
-        name: companyName,
-        slug: generateSlug(companyName),
-      },
-      // client
+      { name: companyName, slug: generateSlug(companyName) || `company-${Date.now()}` },
+      client
     );
-
-    const membership = await createCompanyMember(
-      user.id,
-      company.id,
-      // client
-    );
-
+    const membership = await createCompanyMember(user.id, company.id, client);
     await client.query("COMMIT");
 
-    const secret = process.env.JWT_SECRET;
-
-    if (!secret) {
-      throw new Error("JWT_SECRET is not configured");
-    }
-
     const token = jwt.sign(
-      {
-        userId: user.id,
-        companyId: company.id,
-        role: membership.role,
-      },
+      { userId: user.id, companyId: company.id, role: membership.role },
       secret,
-      {
-        expiresIn: "1h",
-      }
+      { expiresIn: "1h" }
     );
 
+    // Keep the registration response identical to the login Session contract.
     return {
-      user,
-      company,
-      membership,
+      user: { id: user.id, name: user.name, email: user.email },
+      company: { id: company.id, name: company.name, slug: company.slug },
+      role: membership.role,
       token,
     };
   } catch (error) {
